@@ -61,27 +61,44 @@ const defaultMovies = [
     },
 ];
 
-const API_URL = "https://www.omdbapi.com/?apikey=5baa7886";
+// const API_URL = "https://www.omdbapi.com/?apikey=5baa7886";
 
 const App = () => {
-    const [movies, setMovies] = useState(defaultMovies);
+    const [movies, setMovies] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
+
+    useEffect(() => {
+        fetchMovies();
+    }, []);
+
+    const fetchMovies = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/api/movies");
+            const data = await response.json();
+            console.log(data);
+            setMovies(data);
+        } catch (error) {
+            console.error("Failed to fetch movies from backend:", error);
+            setMovies([]); // Reset to an empty array in case of an error
+        }
+    };
+
 
     useEffect(() => {
         if (searchTerm) {
             searchMovies(searchTerm);
         } else {
             // Reset to default movies if no search term is provided
-            setMovies(defaultMovies);
+            setMovies(fetchMovies());
         }
     }, [searchTerm]);
 
     const searchMovies = async (title) => {
-        const response = await fetch(`${API_URL}&s=${title}`);
+        const response = await fetch(`http://localhost:8080/api/movies/search?keyword=${title}`);
         const data = await response.json();
 
-        if (data.Search) {
-            setMovies(data.Search);
+        if (data) {
+            setMovies(data);
         } else {
             setMovies([]); // Handle case where no movies are found
         }
@@ -110,7 +127,7 @@ const App = () => {
                 movies.length > 0 ? (
                     <div className='container'>
                         {movies.map((movie) => (
-                            <MovieCard movie={movie} key={movie.imdbID} />
+                            <MovieCard movie={movie} key={movie.id} />
                         ))}
                     </div>
                 ) : (
